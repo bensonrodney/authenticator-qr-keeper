@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# This is a simple script to encypt a file, then decrypt it to a different file
+# and then shasum the original and the decrypted to check they're the same.
+# The encrypted file is kept as well and is used by the PoC python code to read
+# the encrypted file.
+
 infile="./plaintext_source"
 encrypted_file="./encrypted"
 decrypted_file="./plaintext_decrypted"
