@@ -16,6 +16,11 @@ function clean_up() {
 	fi
 }
 
+if [[ -z ${_file// } ]]; then
+	echo "No file specified. Nothing to do."
+	exit 1
+fi
+
 if [[ ! -f ${_file} ]]; then
 	echo -n "File doesn't exist. Create a new one? [Yn]: "
 	read _new_file
@@ -49,7 +54,13 @@ _end_shasum="$(sha256sum ${tmp_file}| cut -f1 -d' ')"
 if [[ "${_start_shasum}" = "${_end_shasum}" ]]; then
 	echo "No changes to file. Not rewriting enctryped file."
 else
+	if [[ -z ${_make_new_file} ]]; then
+		backup_file="${_file}-$(date +%Y-%m-%d-%H%M%S)"
+		echo "Backing up old file to: ${backup_file}"
+		cp ${_file} ${backup_file}
+	fi
 	encrypt_file ${tmp_file} ${_file} "${_password}"
+	chmod 600 ${_file}
 fi
 
 clean_up
