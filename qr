@@ -1,0 +1,180 @@
+#!/usr/bin/env python3
+
+"""
+The purpose of this script is to reproduce Google Authenticator QR codes
+from a list of accounts defined in a file '/home/$USER/.qrcodes`
+
+A list of accounts is displayed and you select which code you want to view.
+
+Dependencies:
+Requires the  'qrencode' package to be installed. If you don't have it, run the
+command below:
+    sudo apt-get install qrencode
+"""
+
+import copy
+import getpass
+import hashlib
+import io
+import os
+import shlex
+from subprocess import Popen, PIPE
+import sys
+import urllib.parse
+from Crypto.Cipher import AES
+
+TYPE_TOTP = 'totp'
+TYPE_HOTP = 'hotp'
+
+src_file = "/home/{}/.qrcodes".format(getpass.getuser())
+
+
+def RunCommand(cmd, bytes_output=True):
+    """ Runs a local shell command.
+
+        if the bytes_output boolean is set to True, the return value will
+        contain bytes() objects rather than str() objects. On python 2 this has
+        no effect.
+
+        functions which call RunCommand are generally considered responsible for
+        converting to str in python 3.
+    """
+    p = Popen(shlex.split(cmd),
+                         stdin=PIPE,
+                         stdout=PIPE,
+                         stderr=PIPE)
+    stdout, stderr = p.communicate()
+
+    if bytes_output:
+        return stdout, stderr, p.returncode
+    else:
+        return stdout.decode(), stderr.decode(), p.returncode
+
+def read_and_decrypt_file(file, password):
+    '''
+    Returns a file-like stream object (in memory) which contains the decrypted
+    file data.
+    '''
+    pbkdf2iterations=10000
+    passwordbytes = password.encode('utf-8')
+
+    with open(file, 'rb') as f:
+        openssloutputbytes = f.read()
+
+    salt = openssloutputbytes[8:16]
+
+    derivedkey = hashlib.pbkdf2_hmac('sha256', passwordbytes, salt, pbkdf2iterations, 48)
+
+    key = derivedkey[0:32]
+    iv = derivedkey[32:48]
+
+    ciphertext = openssloutputbytes[16:]
+
+    decryptor = AES.new(key, AES.MODE_CBC, iv)
+    plaintext = decryptor.decrypt(ciphertext)
+
+    plaintext = plaintext[:-plaintext[-1]]
+    try:
+        plaintext = plaintext.decode()
+        return io.StringIO(plaintext)
+    except UnicodeDecodeError:
+        return None
+
+
+class Code(object):
+    def __init__(self, acct, issuer, secret, pwtype=TYPE_TOTP, moreopts=""):
+        self._type = pwtype
+        self._acct = acct.strip()
+        self._issuer = issuer.strip()
+        self._secret = secret.strip()
+        self._moreopts = moreopts.strip()
+
+    def _get_acct(self):
+        return copy.copy(self._acct)
+    acct = property(_get_acct)
+
+    def __str__(self):
+        rv = "otpauth://{}/{}?secret={}&issuer={}"\
+                 .format(self._type,
+                         urllib.parse.quote(self._acct),
+                         self._secret,
+                         self._issuer)
+        if len(self._moreopts) > 0:
+            rv += "&{}".format(self._moreopts)
+        return rv
+
+    def show_qr(self):
+        os.system('qrencode -t ANSI "{}"'.format(str(self)))
+
+
+def check_for_qrencode():
+    cmd = 'which qrencode'
+    stdout, stderr, rc = RunCommand(cmd)
+    return rc == 0
+
+
+def parse_file(src, password):
+    codes = []
+    try:
+        data_stream = read_and_decrypt_file(src, password)
+        if not data_stream:
+            return []
+        lines = [l.strip() for l in data_stream.readlines()]
+        lines = [l for l in lines if (len(l) > 0) and (l[0] != "#")]
+        for l in lines:
+            data = [d.strip() for d in l.split("|")]
+            acct = data[0]
+            issuer = data[1]
+            secret = data[2]
+            kwargs = {}
+            if len(data) > 3 and len(data[3]) > 0:
+                kwargs['pwtype'] = data[3]
+            if len(data) > 4 and len(data[4]) > 0:
+                kwargs['moreopts'] = data[4]
+            codes.append(Code(acct, issuer, secret, **kwargs))
+        return codes
+    except FileNotFoundError:
+        return None
+
+
+def select_and_print_code(codes):
+    sel = None
+    codes.sort(key=Code._get_acct)
+    while sel is None:
+        print("\n\nSelect a code to view:\n\n")
+        for i, c in enumerate(codes):
+            print("    {:>2}) {}".format(i+1, c.acct))
+        try:
+            selection = input("\n\nEnter selection: ")
+            sel = int(selection)
+            if sel < 1 or sel > len(codes):
+                print("Selection invalid!\n\n")
+                sel = None
+        except ValueError:
+            print("Selection invalid!")
+            sel = None
+        except KeyboardInterrupt:
+            print("\nAborted!\n\n")
+            return 1
+    print(codes[sel-1].acct)
+    codes[sel-1].show_qr()
+    return 0
+
+
+def main():
+    password = getpass.getpass()
+    if not check_for_qrencode():
+        print('ERROR! "qrencode" not installed. Try "sudo apt-get install qrencode"')
+        return 1
+    codes = parse_file(src_file, password)
+    if codes is None:
+        print('ERROR! Couldn\'t parse file: {}'.format(src_file))
+        return 1
+    if len(codes) < 1:
+        print('ERROR: No codes found in source file: {}'.format(src_file))
+        return 1
+    return select_and_print_code(codes)
+
+if __name__ == '__main__':
+    sys.exit(main())
+
