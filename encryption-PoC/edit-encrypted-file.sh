@@ -56,7 +56,7 @@ tmp_file="${tmp_dir}/tmp-edit"
 
 if [[ -z ${_make_new_file} ]]; then
 	decrypt_file ${_file} ${tmp_file} "${_password}"
-else	
+else
 	touch ${tmp_file}
 fi
 
