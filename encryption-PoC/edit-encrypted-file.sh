@@ -1,7 +1,5 @@
 #!/bin/bash
 
-source ./crypt.sh
-
 _file=$1
 _make_new_file=""
 tmp_dir=""
