@@ -181,7 +181,7 @@ def main():
         print('ERROR! Couldn\'t parse file: {}'.format(src_file))
         return 1
     if len(codes) < 1:
-        print('ERROR: No codes found in source file: {}'.format(src_file))
+        print('ERROR: No codes found in source file or the password is incorrect.')
         return 1
     choice_regex = re.compile(r'^([yY]|[yY][eE][sS]|)$')
     while True:
