@@ -56,6 +56,10 @@ def read_and_decrypt_file(file, password):
     '''
     Returns a file-like stream object (in memory) which contains the decrypted
     file data.
+    The file will have been encrypted in bash using the command below:
+
+	echo "${password}" | openssl aes-256-cbc -pbkdf2 -iter 10000 -salt -in ${infile} -out ${outfile} -pass stdin
+
     '''
     pbkdf2iterations=10000
     passwordbytes = password.encode('utf-8')
