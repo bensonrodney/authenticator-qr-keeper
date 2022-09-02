@@ -17,6 +17,7 @@ import getpass
 import hashlib
 import io
 import os
+import re
 import shlex
 from subprocess import Popen, PIPE
 import sys
@@ -145,7 +146,11 @@ def select_and_print_code(codes):
         for i, c in enumerate(codes):
             print("    {:>2}) {}".format(i+1, c.acct))
         try:
-            selection = input("\n\nEnter selection: ")
+            try:
+                selection = input("\n\nEnter selection: ")
+            except KeyboardInterrupt:
+                return 1
+
             sel = int(selection)
             if sel < 1 or sel > len(codes):
                 print("Selection invalid!\n\n")
@@ -162,7 +167,12 @@ def select_and_print_code(codes):
 
 
 def main():
-    password = getpass.getpass()
+    try:
+        password = getpass.getpass()
+    except KeyboardInterrupt:
+        print()
+        return 0
+
     if not check_for_qrencode():
         print('ERROR! "qrencode" not installed. Try "sudo apt-get install qrencode"')
         return 1
@@ -173,7 +183,19 @@ def main():
     if len(codes) < 1:
         print('ERROR: No codes found in source file: {}'.format(src_file))
         return 1
-    return select_and_print_code(codes)
+    choice_regex = re.compile(r'^([yY]|[yY][eE][sS]|)$')
+    while True:
+        try:
+            if select_and_print_code(codes) != 0:
+                print()
+                break
+            choice = input("Display another code? [Yn]: ")
+            if not choice_regex.search(choice):
+                break
+        except KeyboardInterrupt:
+            print()
+            break
+
 
 if __name__ == '__main__':
     sys.exit(main())
