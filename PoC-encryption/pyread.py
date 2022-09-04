@@ -6,6 +6,9 @@ from the bash command line.
 
 The reason for this is that the file needs to be decrypted, edited and re-encrypted
 in bash. The file is then decrypted and used python script.
+
+The code here came from one of the answers on this Stack Overflow page:
+    https://stackoverflow.com/questions/16761458/how-to-decrypt-openssl-aes-encrypted-files-in-python
 '''
 
 import binascii
