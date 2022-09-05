@@ -11,8 +11,6 @@ The code here came from one of the answers on this Stack Overflow page:
     https://stackoverflow.com/questions/16761458/how-to-decrypt-openssl-aes-encrypted-files-in-python
 '''
 
-import binascii
-import base64
 import hashlib
 from getpass import getpass
 from Crypto.Cipher import AES
