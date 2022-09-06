@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 
+'''
+The purpose of this module is to provide python encryption and decryption functions
+that are compatible with the openssl commands below:
+
+encryption by openssl:
+    openssl aes-256-cbc -pbkdf2 -iter 10000 -salt -in /path/to/unencrypted/input/file -out /path/to/encrypted/output/file
+
+decryption by openssl:
+    openssl aes-256-cbc -d -pbkdf2 -iter 10000 -in /path/to/encrypted/input/file -out /path/to/decrypted/output/file
+'''
+
 import hashlib
 from Crypto.Cipher import AES
 from Crypto import Random
@@ -22,7 +33,7 @@ def _pad(s: bytes) -> bytes:
     The requirement is that only the last byte needs to be set to that
     but it's easier to just write them all with the same value.
     '''
-    # pad_len can never be 0 as the number of padding bytes always needs to be written.
+    # pad_bytes_count can never be 0 as the number of padding bytes always needs to be written.
     # The calculation of pad_len below always produces a result from 1 to BS inclusive
     pad_bytes_count = BS - (len(s) % BS)
     return s + (pad_bytes_count.to_bytes(1, byteorder='big') * pad_bytes_count)
@@ -64,6 +75,24 @@ def decrypt_file_bytes(ciphertext: bytes, password: str) -> bytes:
     decryptor = AES.new(key, AES.MODE_CBC, iv)
     plaintext = decryptor.decrypt(ciphertext)
     return _unpad(plaintext)
+
+
+def save_data_to_encrypted_file(output_file: str, plaintext: bytes, password: str, salt: Optional[bytes] = None) -> None:
+    '''
+    Saves a set of unencrypted bytes to an encrypted file.
+    '''
+    encrypted_data = encrypt_file_bytes(plaintext, password, salt)
+    with open(output_file, 'wb') as f:
+        f.write(encrypted_data)
+
+
+def load_data_from_encrypted_file(input_file: str, password: str) -> bytes:
+    '''
+    Loads a set of decrypted bytes from an encrypted file.
+    '''
+    with open(input_file, 'rb') as f:
+        ciphertext_data = f.read()
+    return decrypt_file_bytes(ciphertext_data, password)
 
 
 if __name__ == '__main__':
