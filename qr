@@ -34,28 +34,6 @@ PBKDF2_ITERATIONS = 10000
 src_file = Path("/home/{}/.qrcodes".format(getpass.getuser()))
 
 
-def RunCommand(cmd, bytes_output=True):
-    """ Runs a local shell command.
-
-        if the bytes_output boolean is set to True, the return value will
-        contain bytes() objects rather than str() objects. On python 2 this has
-        no effect.
-
-        functions which call RunCommand are generally considered responsible for
-        converting to str in python 3.
-    """
-    p = Popen(shlex.split(cmd),
-              stdin=PIPE,
-              stdout=PIPE,
-              stderr=PIPE)
-    stdout, stderr = p.communicate()
-
-    if bytes_output:
-        return stdout, stderr, p.returncode
-    else:
-        return stdout.decode(), stderr.decode(), p.returncode
-
-
 def read_and_decrypt_file(file, password):
     '''
     Returns a file-like stream object (in memory) which contains the decrypted
