@@ -16,7 +16,7 @@ import copy
 import getpass
 import hashlib
 import io
-import os
+from pathlib import Path
 from qrcode import QRCode
 import re
 import shlex
@@ -28,7 +28,10 @@ from Crypto.Cipher import AES
 TYPE_TOTP = 'totp'
 TYPE_HOTP = 'hotp'
 
-src_file = "/home/{}/.qrcodes".format(getpass.getuser())
+# iterations when hashing the password
+PBKDF2_ITERATIONS = 10000
+
+src_file = Path("/home/{}/.qrcodes".format(getpass.getuser()))
 
 
 def RunCommand(cmd, bytes_output=True):
@@ -42,15 +45,16 @@ def RunCommand(cmd, bytes_output=True):
         converting to str in python 3.
     """
     p = Popen(shlex.split(cmd),
-                         stdin=PIPE,
-                         stdout=PIPE,
-                         stderr=PIPE)
+              stdin=PIPE,
+              stdout=PIPE,
+              stderr=PIPE)
     stdout, stderr = p.communicate()
 
     if bytes_output:
         return stdout, stderr, p.returncode
     else:
         return stdout.decode(), stderr.decode(), p.returncode
+
 
 def read_and_decrypt_file(file, password):
     '''
@@ -61,25 +65,29 @@ def read_and_decrypt_file(file, password):
 	echo "${password}" | openssl aes-256-cbc -pbkdf2 -iter 10000 -salt -in ${infile} -out ${outfile} -pass stdin
 
     '''
-    pbkdf2iterations=10000
     passwordbytes = password.encode('utf-8')
 
     with open(file, 'rb') as f:
         openssloutputbytes = f.read()
 
+    # The first 16 bytes of the file are: 'Salted__XXXXXXXX' where 'XXXXXXXX' is the actual
+    # salt bytes
     salt = openssloutputbytes[8:16]
 
-    derivedkey = hashlib.pbkdf2_hmac('sha256', passwordbytes, salt, pbkdf2iterations, 48)
+    derivedkey = hashlib.pbkdf2_hmac('sha256', passwordbytes, salt, PBKDF2_ITERATIONS, 48)
 
     key = derivedkey[0:32]
     iv = derivedkey[32:48]
 
+    # the ciphertext is all the bytes after 'Salted__XXXXXXXX'
     ciphertext = openssloutputbytes[16:]
 
     decryptor = AES.new(key, AES.MODE_CBC, iv)
     plaintext = decryptor.decrypt(ciphertext)
 
-    plaintext = plaintext[:-plaintext[-1]]
+    # the last byte of the plaintext is the number of padding bytes
+    pad_bytes_count = plaintext[-1]
+    plaintext = plaintext[:-pad_bytes_count]
     try:
         plaintext = plaintext.decode()
         return io.StringIO(plaintext)
@@ -113,12 +121,6 @@ class Code(object):
         code = QRCode()
         code.add_data(str(self))
         code.print_ascii()
-
-
-def check_for_qrencode():
-    cmd = 'which qrencode'
-    stdout, stderr, rc = RunCommand(cmd)
-    return rc == 0
 
 
 def parse_file(src, password):
@@ -174,22 +176,25 @@ def select_and_print_code(codes):
 
 
 def main():
+    if not src_file.is_file():
+        print('ERROR: source file not found. Exiting.')
+        return 1
+
     try:
         password = getpass.getpass()
     except KeyboardInterrupt:
         print()
         return 0
 
-    if not check_for_qrencode():
-        print('ERROR! "qrencode" not installed. Try "sudo apt-get install qrencode"')
-        return 1
-    codes = parse_file(src_file, password)
+    codes = parse_file(str(src_file), password)
     if codes is None:
-        print('ERROR! Couldn\'t parse file: {}'.format(src_file))
+        print('ERROR! Couldn\'t parse source file.')
         return 1
+
     if len(codes) < 1:
         print('ERROR: No codes found in source file or the password is incorrect.')
         return 1
+
     choice_regex = re.compile(r'^([yY]|[yY][eE][sS]|)$')
     while True:
         try:
