@@ -18,6 +18,10 @@ from typing import (
     Optional,
     Tuple,
 )
+# test imports
+from pathlib import Path
+from tempfile import TemporaryDirectory
+import subprocess
 
 BS = AES.block_size
 PBKDF2_ITERATIONS = 10000
@@ -96,9 +100,46 @@ def load_data_from_encrypted_file(input_file: str, password: str) -> bytes:
 
 
 if __name__ == '__main__':
+    # TODO: moves tests to run in pytest under a 'tests' directory
     plaintext = "some awesome string that we CAN TEST"
     password = "bobloblaw"
 
     encrypted_bytes = encrypt_file_bytes(plaintext.encode(), password)
     decrypted_bytes = decrypt_file_bytes(encrypted_bytes, password)
     assert decrypted_bytes.decode() == plaintext
+
+    # Test python can decrypt python encrypted file
+    # Test openssl can decrypt python encrypted file
+    # Test python can decrypt openssl encrypted file
+    with TemporaryDirectory(prefix="passcrypt_") as tmpdir:
+        # write encrypted data to a file
+        plaintext_file = Path(tmpdir) / 'plaintext_file'
+        with open(str(plaintext_file), 'w') as f:
+            f.write(plaintext)
+
+        python_encrypted_file = Path(tmpdir) / 'python_encrypted_file'
+        save_data_to_encrypted_file(str(python_encrypted_file), plaintext.encode(), password)
+
+        # confirm openssl can decrypt the file
+        result1 = subprocess.run(
+            f'echo "{password}" | openssl aes-256-cbc -d -pass stdin -pbkdf2 -iter 10000 -in {str(python_encrypted_file)}',
+            shell=True, check=False, stdout=subprocess.PIPE,
+        )
+
+        # decrypt our encrypted file using the helper function
+        python_decrypted_file_bytes = load_data_from_encrypted_file(str(python_encrypted_file), password)
+
+        # create encrypted file using openssl and decrypt in python
+        openssl_encrypted_file = Path(tmpdir) / 'openssl_encrypted_file'
+        result2 = subprocess.run(
+            f'echo "{password}" | openssl aes-256-cbc -pass stdin -pbkdf2 -iter 10000 -salt -in {str(plaintext_file)} -out {str(openssl_encrypted_file)}',
+            shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        )
+        assert result2.returncode == 0
+        python_decrypted_file_bytes2 = load_data_from_encrypted_file(str(openssl_encrypted_file), password)
+
+    # make assertions about the decrypted data
+    assert python_decrypted_file_bytes.decode() == plaintext
+    assert result1.returncode == 0
+    assert result1.stdout.decode() == plaintext
+    assert python_decrypted_file_bytes2.decode() == plaintext
