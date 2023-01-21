@@ -64,7 +64,7 @@ $EDITOR ${tmp_file}
 _end_shasum="$(sha256sum ${tmp_file}| cut -f1 -d' ')"
 
 if [[ "${_start_shasum}" = "${_end_shasum}" ]]; then
-	echo "No changes to file. Not rewriting enctryped file."
+	echo "No changes to file. Not rewriting encrypted file."
 else
 	if [[ -z ${_make_new_file} ]]; then
 		backup_file="${_file}-backup-$(date +%Y-%m-%d-%H%M%S)"
