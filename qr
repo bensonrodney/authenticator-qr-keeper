@@ -102,6 +102,17 @@ class Code(object):
 
 
 def parse_file(src, password):
+    '''
+    I want to change this to read full otpauth URL rather than manually separate the fields as I have been.
+    With a full URL, you can do the following:
+        url = urllib.parse.urlparse("otpauth://totp/Code%20Name?secret=123456789&issuer=Some%20Company")
+        print(urllib.parse.unquote(url.path)[1:])
+        print(urllib.parse.parse_qs(url.query))
+
+    Produces:
+        Code Name
+        {'secret': ['123456789'], 'issuer': ['Some Company']}
+    '''
     codes = []
     try:
         data_stream = read_and_decrypt_file(src, password)
@@ -119,7 +130,8 @@ def parse_file(src, password):
                 kwargs['pwtype'] = data[3]
             if len(data) > 4 and len(data[4]) > 0:
                 kwargs['moreopts'] = data[4]
-            codes.append(Code(acct, issuer, secret, **kwargs))
+            new_code = Code(acct, issuer, secret, **kwargs)
+            codes.append(new_code)
         return codes
     except FileNotFoundError:
         return None
