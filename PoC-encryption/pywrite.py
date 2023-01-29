@@ -11,7 +11,7 @@ import hashlib
 from Crypto.Cipher import AES
 from Crypto import Random
 
-iterations = 10000
+PBKDF2_ITERATIONS = 10000
 bs = AES.block_size
 
 
@@ -47,7 +47,7 @@ def encrypt(plaintext_bytes: bytes, password: str) -> bytes:
         P = number of padding bytes
     '''
     salt = Random.new().read(AES.block_size - len('Salted__'))
-    derived_key = hashlib.pbkdf2_hmac('sha256', password.encode(), salt, iterations, 48)
+    derived_key = hashlib.pbkdf2_hmac('sha256', password.encode(), salt, PBKDF2_ITERATIONS, 48)
     key = derived_key[0:32]
     iv = derived_key[32:48]
 

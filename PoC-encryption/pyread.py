@@ -20,7 +20,7 @@ from Crypto.Cipher import AES
 
 infile = "./encrypted"
 password = getpass()
-pbkdf2iterations=10000
+PBKDF2_ITERATIONS = 10000
 
 with open(infile, 'rb') as f:
     openssloutputbytes = f.read()
@@ -29,7 +29,7 @@ with open(infile, 'rb') as f:
 # where 'XXXXXXXX' are the actual salt bytes
 salt = openssloutputbytes[8:16]
 
-derivedkey = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, pbkdf2iterations, 48)
+derivedkey = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, PBKDF2_ITERATIONS, 48)
 
 key = derivedkey[0:32]
 iv = derivedkey[32:48]
