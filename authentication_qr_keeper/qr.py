@@ -6,10 +6,6 @@ from a list of accounts defined in a file '/home/$USER/.qrcodes`
 
 A list of accounts is displayed and you select which code you want to view.
 
-Dependencies:
-Requires the  'qrencode' package to be installed. If you don't have it, run the
-command below:
-    sudo apt-get install qrencode
 """
 
 import copy
@@ -245,6 +241,8 @@ def do_show_codes() -> int:
             print()
             break
 
+    return 0
+
 
 def add_code_to_file(src, password, code):
     data_stream = read_and_decrypt_file(src, password)
@@ -310,6 +308,7 @@ def main():
         return do_add_code(args.add)
 
     return do_show_codes()
+
 
 if __name__ == '__main__':
     sys.exit(main())
