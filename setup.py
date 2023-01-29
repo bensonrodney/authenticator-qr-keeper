@@ -22,7 +22,7 @@ setup(
     packages=find_packages(),
     entry_points = {
         'console_scripts': [
-            'qrcodes=authentication_qr_keeper.qr:main`',
+            'qrcodes=authentication_qr_keeper.qr:main',
         ],
     },
     install_requires=requires,
