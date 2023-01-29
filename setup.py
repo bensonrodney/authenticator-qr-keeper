@@ -25,6 +25,11 @@ setup(
             'qrcodes=authentication_qr_keeper.qr:main',
         ],
     },
+    scripts=[
+        'scripts/decrypt-file.sh',
+        'scripts/edit-encrypted-file.sh',
+        'scripts/encrypt-file.sh',
+    ],
     install_requires=requires,
     keywords='conversion',
     classifiers= [
@@ -34,8 +39,3 @@ setup(
         "Programming Language :: Python :: 3",
     ]
 )
-#    scripts=[
-#        'scripts/decrypt-file.sh',
-#        'scripts/edit-encrypted-file.sh',
-#        'scripts/encrypt-file.sh',
-#    ],
