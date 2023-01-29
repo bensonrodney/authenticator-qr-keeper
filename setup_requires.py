@@ -6,6 +6,7 @@ actually needs to still be added.
 """
 runtime_requires = [
     "opencv-python",
+    "pycryptodome",
     "qrcode>=7.3.1",
 ]
 
