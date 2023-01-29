@@ -5,5 +5,6 @@ There are also some missing packages here. Need to figure out what
 actually needs to still be added.
 '''
 requires = [
+    "opencv-python",
     "qrcode>=7.3.1",
 ]
