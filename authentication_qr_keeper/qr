@@ -12,32 +12,25 @@ command below:
     sudo apt-get install qrencode
 """
 
-from argparse import ArgumentParser
 import copy
-from cv2 import (
-    imread,
-    QRCodeDetector,
-)
-from datetime import datetime
 import getpass
 import hashlib
 import io
-from pathlib import Path
-from qrcode import QRCode
 import re
 import shlex
-from shutil import copyfile
-from subprocess import Popen, PIPE
 import sys
+from argparse import ArgumentParser
+from datetime import datetime
+from pathlib import Path
+from shutil import copyfile
+from subprocess import PIPE, Popen
 from typing import Union
-from urllib.parse import (
-    parse_qs,
-    quote,
-    unquote,
-    urlparse,
-)
-from Crypto.Cipher import AES
+from urllib.parse import parse_qs, quote, unquote, urlparse
+
 from Crypto import Random
+from Crypto.Cipher import AES
+from cv2 import QRCodeDetector, imread
+from qrcode import QRCode
 
 TYPE_TOTP = 'totp'
 TYPE_HOTP = 'hotp'
