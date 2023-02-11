@@ -35,7 +35,9 @@ TYPE_HOTP = 'hotp'
 PBKDF2_ITERATIONS = 10000
 bs = AES.block_size
 
-src_file = Path("/home/{}/.qrcodes".format(getpass.getuser()))
+user = getpass.getuser()
+src_file_dir = Path(f"/home/{user}/.qr")
+src_file = src_file_dir / ".qrcodes"
 leading_slashes = re.compile('^[/]{1,}')
 
 
@@ -208,10 +210,31 @@ def select_and_print_code(codes):
     return 0
 
 
+def create_file():
+    password1 = getpass.getpass("Enter a password for the encrypted file: ")
+    password2 = getpass.getpass("Enter the password again: ")
+    if password1 != password2:
+        print("Error: passwords don't match.")
+        return False
+
+    if not src_file_dir.is_dir():
+        src_file_dir.mkdir()
+    with open(str(src_file), 'wb') as _file:
+        encrypted_data = encrypt(b'', password1)
+        _file.write(encrypted_data)
+    return True
+
+
 def do_show_codes() -> int:
     if not src_file.is_file():
-        print('ERROR: source file not found. Exiting.')
-        return 1
+        print(f"File doen't exist: {src_file}")
+        print("Creating file now...")
+        file_created = create_file()
+        if file_created:
+            print("File now exists but will be empty. You need to add codes before it will be useful.")
+        else:
+            print(f"Error creating file: {src_file}")
+        return 0 if file_created else 1
 
     try:
         password = getpass.getpass()
@@ -265,6 +288,15 @@ def add_code_to_file(src, password, code):
 
 
 def do_add_code(image_file_path: Union[str, Path]) -> int:
+    if not src_file.is_file():
+        print(f"File doen't exist: {src_file}")
+        file_created = create_file()
+        if file_created:
+            print("File is now created, try again.")
+        else:
+            print(f"Error creating file: {src_file}")
+        return 0 if file_created else 1
+
     if not isinstance(image_file_path, Path):
         image_file_path = Path(image_file_path)
 
