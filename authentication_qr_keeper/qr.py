@@ -155,7 +155,7 @@ class Code(object):
     def show_qr(self):
         code = QRCode()
         code.add_data(str(self))
-        code.print_ascii()
+        code.print_ascii(invert=True)
 
 
 def parse_file(src, password):
