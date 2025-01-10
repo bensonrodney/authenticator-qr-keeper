@@ -12,7 +12,7 @@ runtime_requires = [
 
 testing_requires = [
     "black",
-    "isort",
+    "isort<=5.12.0",
     "flake8",
     "pylint",
 ]

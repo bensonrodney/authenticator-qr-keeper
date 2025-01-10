@@ -11,6 +11,7 @@ requires = runtime_requires
 if environ.get('_TESTING', "").lower() == 'true':
     requires += testing_requires
 
+
 setup(
     name="qr",
     version=VERSION,
