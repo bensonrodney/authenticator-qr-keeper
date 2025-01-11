@@ -40,3 +40,7 @@ setup(
         "Programming Language :: Python :: 3",
     ]
 )
+
+print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+print("#### NOTE!!! You may need to install 'libgl1': sudo apt-get install libgl1")
+print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
