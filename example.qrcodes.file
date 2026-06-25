@@ -5,5 +5,9 @@
 # This file allows you to store QR authenticator codes but customise the account name,
 # issuer and other things in the QR code.
 
-# Example codes are below
-otpauth://totp/My%20Service%3Amyuser?secret=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ&issuer=My%20Service
+# Example codes are below (fake credentials — safe to share, not tied to any real accounts)
+otpauth://totp/GitHub%3Ademo%40example.com?secret=JBSWY3DPEHPK3PXP&issuer=GitHub
+otpauth://totp/Google%3Ademo%40example.com?secret=MFRA2YTBMJQXIZLS&issuer=Google
+otpauth://totp/AWS%3Ademo-user?secret=GEZDGNBVGY3TQOJQGE&issuer=Amazon%20Web%20Services
+otpauth://totp/Dropbox%3Ademo%40example.com?secret=KRUGKIDROVUWG2ZA&issuer=Dropbox
+otpauth://totp/Slack%3Ademo-workspace?secret=ONSWG4TFOQQGK3TF&issuer=Slack

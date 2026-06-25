@@ -4,6 +4,10 @@ A command-line tool for securely storing and reproducing TOTP authenticator QR c
 
 When you set up two-factor authentication, most services show you a QR code once and never again. If you lose your phone or switch authenticator apps, you're stuck going through account recovery for every service. This tool lets you save those QR codes in an AES-256 encrypted file so you can reproduce them any time — and it also shows you the current live OTP code so you don't even need to scan the QR.
 
+## Demo
+
+<video src="https://ejectedalien-publicly-accessible.s3.ap-southeast-2.amazonaws.com/videos/authenticator_qr_keeper_demo.mp4" controls width="700"></video>
+
 ## Features
 
 - Stores `otpauth://` URLs in an AES-256-CBC encrypted file (compatible with `openssl`)
