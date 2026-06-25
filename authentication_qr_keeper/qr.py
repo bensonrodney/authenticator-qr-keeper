@@ -226,6 +226,7 @@ def select_and_print_code(codes):
     if selected is None:
         _clear_screen()
         return 1
+    _clear_screen()
     print(selected.name)
     selected.show_qr()
     _clear_screen()
