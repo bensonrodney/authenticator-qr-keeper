@@ -11,3 +11,6 @@ otpauth://totp/Google%3Ademo%40example.com?secret=MFRA2YTBMJQXIZLS&issuer=Google
 otpauth://totp/AWS%3Ademo-user?secret=GEZDGNBVGY3TQOJQGE&issuer=Amazon%20Web%20Services
 otpauth://totp/Dropbox%3Ademo%40example.com?secret=KRUGKIDROVUWG2ZA&issuer=Dropbox
 otpauth://totp/Slack%3Ademo-workspace?secret=ONSWG4TFOQQGK3TF&issuer=Slack
+
+# Example WiFi credential
+WIFI:T:WPA2;S:ExampleNetwork;P:examplepassword;;
