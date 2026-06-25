@@ -134,10 +134,12 @@ def _interactive_select(codes: list) -> "Code | None":
         except Exception:
             pass
         curses.curs_set(1)
+        stdscr.timeout(1000)  # refresh OTP codes every second
 
         query = ""
         cursor_pos = 0
         scroll_offset = 0
+        max_name_len = max((len(c.name) for c in codes), default=0)
 
         while True:
             height, width = stdscr.getmaxyx()
@@ -163,16 +165,23 @@ def _interactive_select(codes: list) -> "Code | None":
             except curses.error:
                 pass
 
+            # OTP column sits 2 spaces past the longest name across all codes
+            name_col_width = min(max_name_len, width - 2 - 2 - 7)  # leave room for prefix + padding + OTP
             for i in range(list_height):
                 idx = scroll_offset + i
                 if idx >= len(matches):
                     break
-                name = matches[idx].name
+                code = matches[idx]
+                name = code.name[:name_col_width]
+                otp = code.current_otp
+                otp_str = f"{otp[:3]} {otp[3:]}" if otp else ""
+                prefix = "> " if idx == cursor_pos else "  "
+                line = f"{prefix}{name:<{name_col_width}}  {otp_str}"
                 try:
                     if idx == cursor_pos:
-                        stdscr.addstr(i + 1, 0, f"> {name}"[:width], curses.A_REVERSE)
+                        stdscr.addstr(i + 1, 0, line[:width], curses.A_REVERSE)
                     else:
-                        stdscr.addstr(i + 1, 0, f"  {name}"[:width])
+                        stdscr.addstr(i + 1, 0, line[:width])
                 except curses.error:
                     pass
 
@@ -191,7 +200,9 @@ def _interactive_select(codes: list) -> "Code | None":
 
             key = stdscr.getch()
 
-            if key == curses.KEY_UP:
+            if key == -1:  # timeout — redraw to refresh OTP codes
+                continue
+            elif key == curses.KEY_UP:
                 cursor_pos = max(0, cursor_pos - 1)
             elif key == curses.KEY_DOWN:
                 if matches:
