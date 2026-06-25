@@ -216,13 +216,19 @@ def _interactive_select(codes: list) -> "Code | None":
         return None
 
 
+def _clear_screen():
+    print("\033[2J\033[H", end="", flush=True)
+
+
 def select_and_print_code(codes):
     codes.sort(key=Code._get_name)
     selected = _interactive_select(codes)
     if selected is None:
+        _clear_screen()
         return 1
     print(selected.name)
     selected.show_qr()
+    _clear_screen()
     return 0
 
 
