@@ -7,13 +7,12 @@ name = "authenticator-qr-keeper"
 version = "0.0.1"
 description = "A place to keep and re-display Google Authenticator QR codes"
 readme = "README.md"
-license = { text = "MIT" }
+license = "MIT"
 authors = [{ name = "Jason Milen", email = "jpmilen@gmail.com" }]
 requires-python = ">=3.12"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
 ]
 keywords = ["qrcode", "authenticator", "totp", "encryption"]
