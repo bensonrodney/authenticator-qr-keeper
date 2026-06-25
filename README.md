@@ -47,11 +47,12 @@ On first run, if no codes file exists, you will be prompted to create one and se
 
 ```
   Search: git
-> GitHub:demo@example.com
-  3/5  ↑↓ navigate  Enter select  Esc quit
+> GitHub:demo@example.com    483 921
+  Google:demo@example.com    157 302
+  2/5  ↑↓ navigate  Enter select  Esc quit
 ```
 
-Type to filter your accounts as you type. Search terms are space-separated and use OR logic — `git aws` matches any account containing "git" or "aws". Use `↑↓` to move between matches and **Enter** to select. **Esc** exits.
+The current TOTP code for each account is shown alongside its name and updates every second — so you can often just read the code straight from the list without needing to open the QR view at all. Type to filter your accounts as you type. Search terms are space-separated and use OR logic — `git aws` matches any account containing "git" or "aws". Use `↑↓` to move between matches and **Enter** to select. **Esc** exits.
 
 After selecting an account, the QR code is printed to the terminal and the live TOTP code is shown with a countdown bar:
 
