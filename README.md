@@ -6,7 +6,7 @@ When you set up two-factor authentication, most services show you a QR code once
 
 ## Demo
 
-<video src="https://ejectedalien-publicly-accessible.s3.ap-southeast-2.amazonaws.com/videos/authenticator_qr_keeper_demo.mp4" controls width="700"></video>
+[Watch the demo](https://ejectedalien-publicly-accessible.s3.ap-southeast-2.amazonaws.com/videos/authenticator_qr_keeper_demo.mp4)
 
 ## Features
 
