@@ -2,7 +2,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from authentication_qr_keeper.passcrypt import save_data_to_encrypted_file
-from authentication_qr_keeper.qr import Code, add_code_to_file, parse_file
+from authentication_qr_keeper.qr import Code, add_code_to_file, filter_codes, parse_file
 
 PASSWORD = "testpassword"
 
@@ -154,3 +154,59 @@ def test_add_code_to_file_backup_is_readable():
         codes = parse_file(str(backup), PASSWORD)
         assert len(codes) == 1
         assert codes[0].name == "My Service:myuser"
+
+
+# ---------------------------------------------------------------------------
+# filter_codes
+# ---------------------------------------------------------------------------
+
+CODES = [
+    Code("otpauth://totp/GitHub%3Aalice?secret=JBSWY3DPEHPK3PXP&issuer=GitHub"),
+    Code("otpauth://totp/Google%3Aalice?secret=JBSWY3DPEHPK3PXP&issuer=Google"),
+    Code("otpauth://totp/AWS%3Abob?secret=JBSWY3DPEHPK3PXP&issuer=AWS"),
+]
+
+
+def test_filter_codes_empty_query_returns_all():
+    assert filter_codes(CODES, "") == CODES
+
+
+def test_filter_codes_matches_substring():
+    result = filter_codes(CODES, "git")
+    assert len(result) == 1
+    assert result[0].name == "GitHub:alice"
+
+
+def test_filter_codes_is_case_insensitive():
+    assert filter_codes(CODES, "GIT") == filter_codes(CODES, "git")
+
+
+def test_filter_codes_matches_multiple():
+    # "alice" appears in GitHub and Google entries
+    result = filter_codes(CODES, "alice")
+    assert len(result) == 2
+
+
+def test_filter_codes_no_match_returns_empty():
+    assert filter_codes(CODES, "zzznomatch") == []
+
+
+def test_filter_codes_does_not_mutate_input():
+    original = list(CODES)
+    filter_codes(CODES, "git")
+    assert CODES == original
+
+
+def test_filter_codes_space_separated_terms_use_or_logic():
+    # "github aws" should match GitHub:alice and AWS:bob but not Google:alice
+    result = filter_codes(CODES, "github aws")
+    names = [c.name for c in result]
+    assert "GitHub:alice" in names
+    assert "AWS:bob" in names
+    assert "Google:alice" not in names
+
+
+def test_filter_codes_or_logic_matches_all_when_broad():
+    # "alice bob" matches all three entries (alice in two, bob in one)
+    result = filter_codes(CODES, "alice bob")
+    assert len(result) == 3

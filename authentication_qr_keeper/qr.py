@@ -120,6 +120,13 @@ def parse_file(src, password):
         return None
 
 
+def filter_codes(codes: list, query: str) -> list:
+    if not query:
+        return list(codes)
+    terms = query.lower().split()
+    return [c for c in codes if any(t in c.name.lower() for t in terms)]
+
+
 def _interactive_select(codes: list) -> "Code | None":
     def run(stdscr):
         try:
@@ -136,7 +143,7 @@ def _interactive_select(codes: list) -> "Code | None":
             height, width = stdscr.getmaxyx()
             list_height = max(1, height - 3)
 
-            matches = [c for c in codes if not query or query.lower() in c.name.lower()]
+            matches = filter_codes(codes, query)
 
             if matches:
                 cursor_pos = max(0, min(cursor_pos, len(matches) - 1))
