@@ -11,12 +11,14 @@ import getpass
 import io
 import re
 import sys
+import time
 from argparse import ArgumentParser
 from datetime import datetime
 from pathlib import Path
 from shutil import copyfile
-from urllib.parse import unquote, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
+import pyotp
 from cv2 import QRCodeDetector, imread
 from qrcode import QRCode
 
@@ -69,10 +71,27 @@ class Code:
     def __str__(self):
         return copy.copy(self._raw)
 
+    @property
+    def current_otp(self) -> str | None:
+        if self._url.netloc != TYPE_TOTP:
+            return None
+        params = parse_qs(self._url.query)
+        secrets = params.get("secret", [])
+        if not secrets:
+            return None
+        try:
+            return pyotp.TOTP(secrets[0]).now()
+        except Exception:
+            return None
+
     def show_qr(self):
         code = QRCode()
         code.add_data(str(self))
         code.print_ascii(invert=True)
+        otp = self.current_otp
+        if otp:
+            seconds_remaining = 30 - int(time.time()) % 30
+            print(f"\nCurrent OTP: {otp}  (refreshes in {seconds_remaining}s)\n")
 
 
 def parse_file(src, password):

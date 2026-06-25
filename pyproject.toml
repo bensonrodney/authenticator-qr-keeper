@@ -18,6 +18,7 @@ classifiers = [
 keywords = ["qrcode", "authenticator", "totp", "encryption"]
 dependencies = [
     "opencv-python-headless",
+    "pyotp",
     "pycryptodome",
     "qrcode>=7.3.1",
 ]

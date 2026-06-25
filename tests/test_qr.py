@@ -49,6 +49,28 @@ def test_code_str_strips_surrounding_whitespace():
     assert str(code) == TOTP_URL
 
 
+def test_current_otp_returns_six_digit_string():
+    # Secret must be valid base32 (A-Z and 2-7 only)
+    url = "otpauth://totp/Service%3Auser?secret=JBSWY3DPEHPK3PXP&issuer=Service"
+    code = Code(url)
+    otp = code.current_otp
+    assert otp is not None
+    assert len(otp) == 6
+    assert otp.isdigit()
+
+
+def test_current_otp_is_none_for_hotp():
+    hotp_url = "otpauth://hotp/Service%3Auser?secret=ABCDEF123456&counter=0"
+    code = Code(hotp_url)
+    assert code.current_otp is None
+
+
+def test_current_otp_is_none_when_no_secret():
+    url = "otpauth://totp/Service%3Auser?issuer=Service"
+    code = Code(url)
+    assert code.current_otp is None
+
+
 # ---------------------------------------------------------------------------
 # parse_file
 # ---------------------------------------------------------------------------
