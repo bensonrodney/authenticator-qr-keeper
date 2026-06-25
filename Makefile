@@ -1,21 +1,23 @@
 .PHONY: dev install test lint fmt check
 
-dev:
+.venv: pyproject.toml
 	uv sync --extra dev
+
+dev: .venv
 
 install:
 	uv tool install --reinstall .
 
-test:
+test: .venv
 	uv run pytest
 
-lint:
+lint: .venv
 	uv run ruff check .
 
-fmt:
+fmt: .venv
 	uv run ruff format .
 
-check:
+check: .venv
 	uv run ruff check .
 	uv run ruff format --check .
 	uv run pytest -v
