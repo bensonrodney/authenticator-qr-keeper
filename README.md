@@ -1,6 +1,6 @@
 # authenticator-qr-keeper
 
-A command-line tool for securely storing and reproducing TOTP authenticator QR codes.
+A command-line tool for securely storing and reproducing QR codes — primarily TOTP authenticator codes, but also WiFi credentials and anything else stored as a QR code.
 
 When you set up two-factor authentication, most services show you a QR code once and never again. If you lose your phone or switch authenticator apps, you're stuck going through account recovery for every service. This tool lets you save those QR codes in an AES-256 encrypted file so you can reproduce them any time — and it also shows you the current live OTP code so you don't even need to scan the QR.
 
@@ -10,9 +10,10 @@ When you set up two-factor authentication, most services show you a QR code once
 
 ## Features
 
-- Stores `otpauth://` URLs in an AES-256-CBC encrypted file (compatible with `openssl`)
+- Stores QR codes in an AES-256-CBC encrypted file (compatible with `openssl`)
 - Reproduces QR codes in the terminal
-- Shows the live TOTP code with a countdown to the next rotation
+- Shows live TOTP codes with a countdown in both the selection list and the QR view
+- Supports WiFi QR codes — displays the network name and auth type in the selection list
 - Add new codes by scanning a QR code image file
 - Encrypted file can also be edited with the bundled shell scripts
 
@@ -78,7 +79,12 @@ The codes file lives at `~/.qr/.qrcodes` and is AES-256-CBC encrypted. In its un
 # My accounts
 otpauth://totp/My%20Service%3Amyuser?secret=YOURSECRETHERE&issuer=My%20Service
 otpauth://totp/Another%20Service%3Amyuser?secret=ANOTHERSECRET&issuer=Another%20Service
+
+# WiFi credentials
+WIFI:T:WPA2;S:MyHomeNetwork;P:mysecretpassword;;
 ```
+
+WiFi entries are displayed as `WiFi: NetworkName (WPA2)` in the selection list.
 
 You can edit the file directly using the bundled `edit-encrypted-file.sh` script (see [Shell scripts](#shell-scripts) below), which decrypts to a temp file, opens it in `$EDITOR`, and re-encrypts on save.
 
