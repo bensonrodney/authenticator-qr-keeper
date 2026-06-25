@@ -38,6 +38,15 @@ src_file = src_file_dir / ".qrcodes"
 leading_slashes = re.compile("^[/]{1,}")
 
 
+def _parse_wifi_fields(raw: str) -> dict:
+    fields = {}
+    for part in raw[5:].split(";"):  # strip leading "WIFI:"
+        key, _, value = part.partition(":")
+        if key:
+            fields[key.upper()] = value.strip('"')
+    return fields
+
+
 def read_and_decrypt_file(file, password):
     try:
         plaintext = load_data_from_encrypted_file(file, password)
@@ -65,7 +74,13 @@ class Code:
 
     def _get_name(self):
         if not self._name:
-            self._name = leading_slashes.sub("", unquote(self._url.path))
+            if self._raw.upper().startswith("WIFI:"):
+                fields = _parse_wifi_fields(self._raw)
+                ssid = fields.get("S", "Unknown")
+                auth = fields.get("T", "")
+                self._name = f"WiFi: {ssid}" + (f" ({auth})" if auth else "")
+            else:
+                self._name = leading_slashes.sub("", unquote(self._url.path))
         return copy.copy(self._name)
 
     name = property(_get_name)

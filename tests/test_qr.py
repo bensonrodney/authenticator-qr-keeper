@@ -26,6 +26,26 @@ def test_code_name_decoded_from_url():
     assert code.name == "My Service:myuser"
 
 
+def test_code_name_wifi_shows_ssid_and_auth():
+    code = Code("WIFI:T:WPA;S:MyNetwork;P:password;;")
+    assert code.name == "WiFi: MyNetwork (WPA)"
+
+
+def test_code_name_wifi_no_auth():
+    code = Code("WIFI:T:nopass;S:OpenNetwork;;")
+    assert code.name == "WiFi: OpenNetwork (nopass)"
+
+
+def test_code_name_wifi_quoted_ssid():
+    code = Code('WIFI:T:WPA2;S:"My Network";P:secret;;')
+    assert code.name == "WiFi: My Network (WPA2)"
+
+
+def test_code_name_wifi_case_insensitive_prefix():
+    code = Code("wifi:T:WPA;S:TestNet;P:pass;;")
+    assert code.name == "WiFi: TestNet (WPA)"
+
+
 def test_code_name_strips_leading_slash():
     # urlparse gives path as "/My%20Service" — leading slash must be removed
     code = Code("otpauth://totp/%2FLeading%2FSlashes?secret=X")
