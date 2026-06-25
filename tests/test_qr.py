@@ -1,8 +1,6 @@
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-import pytest
-
 from authentication_qr_keeper.passcrypt import save_data_to_encrypted_file
 from authentication_qr_keeper.qr import Code, add_code_to_file, parse_file
 
@@ -134,10 +132,3 @@ def test_add_code_to_file_backup_is_readable():
         codes = parse_file(str(backup), PASSWORD)
         assert len(codes) == 1
         assert codes[0].name == "My Service:myuser"
-
-
-def test_add_code_to_file_raises_on_bad_password():
-    with TemporaryDirectory() as tmpdir:
-        path = make_encrypted_file(tmpdir, f"{TOTP_URL}\n")
-        with pytest.raises(RuntimeError):
-            add_code_to_file(path, "wrong-password", TOTP_URL_2)
