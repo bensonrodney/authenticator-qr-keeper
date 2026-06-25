@@ -7,6 +7,7 @@ Displays a list of accounts and lets you select which QR code to view.
 """
 
 import copy
+import curses
 import getpass
 import io
 import re
@@ -119,31 +120,102 @@ def parse_file(src, password):
         return None
 
 
-def select_and_print_code(codes):
-    sel = None
-    codes.sort(key=Code._get_name)
-    while sel is None:
-        print("\n\nSelect a code to view:\n\n")
-        for i, c in enumerate(codes):
-            print(f"    {i + 1:>2}) {c.name}")
+def _interactive_select(codes: list) -> "Code | None":
+    def run(stdscr):
         try:
-            try:
-                selection = input("\n\nEnter selection: ")
-            except KeyboardInterrupt:
-                return 1
+            curses.use_default_colors()
+        except Exception:
+            pass
+        curses.curs_set(1)
 
-            sel = int(selection)
-            if sel < 1 or sel > len(codes):
-                print("Selection invalid!\n\n")
-                sel = None
-        except ValueError:
-            print("Selection invalid!")
-            sel = None
-        except KeyboardInterrupt:
-            print("\nAborted!\n\n")
-            return 1
-    print(codes[sel - 1].name)
-    codes[sel - 1].show_qr()
+        query = ""
+        cursor_pos = 0
+        scroll_offset = 0
+
+        while True:
+            height, width = stdscr.getmaxyx()
+            list_height = max(1, height - 3)
+
+            matches = [c for c in codes if not query or query.lower() in c.name.lower()]
+
+            if matches:
+                cursor_pos = max(0, min(cursor_pos, len(matches) - 1))
+            else:
+                cursor_pos = 0
+
+            if cursor_pos < scroll_offset:
+                scroll_offset = cursor_pos
+            elif cursor_pos >= scroll_offset + list_height:
+                scroll_offset = cursor_pos - list_height + 1
+
+            stdscr.erase()
+
+            prompt = f"  Search: {query}"
+            try:
+                stdscr.addstr(0, 0, prompt[:width])
+            except curses.error:
+                pass
+
+            for i in range(list_height):
+                idx = scroll_offset + i
+                if idx >= len(matches):
+                    break
+                name = matches[idx].name
+                try:
+                    if idx == cursor_pos:
+                        stdscr.addstr(i + 1, 0, f"> {name}"[:width], curses.A_REVERSE)
+                    else:
+                        stdscr.addstr(i + 1, 0, f"  {name}"[:width])
+                except curses.error:
+                    pass
+
+            status = f"  {len(matches)}/{len(codes)}  ↑↓ navigate  Enter select  Esc quit"
+            try:
+                stdscr.addstr(height - 1, 0, status[:width])
+            except curses.error:
+                pass
+
+            try:
+                stdscr.move(0, min(len(prompt), width - 1))
+            except curses.error:
+                pass
+
+            stdscr.refresh()
+
+            key = stdscr.getch()
+
+            if key == curses.KEY_UP:
+                cursor_pos = max(0, cursor_pos - 1)
+            elif key == curses.KEY_DOWN:
+                if matches:
+                    cursor_pos = min(len(matches) - 1, cursor_pos + 1)
+            elif key in (10, 13):
+                return matches[cursor_pos] if matches else None
+            elif key == 27:
+                return None
+            elif key in (curses.KEY_BACKSPACE, 127, 8):
+                if query:
+                    query = query[:-1]
+                    cursor_pos = 0
+                    scroll_offset = 0
+            elif 32 <= key <= 126:
+                query += chr(key)
+                cursor_pos = 0
+                scroll_offset = 0
+
+    try:
+        return curses.wrapper(run)
+    except KeyboardInterrupt:
+        return None
+
+
+def select_and_print_code(codes):
+    codes.sort(key=Code._get_name)
+    selected = _interactive_select(codes)
+    if selected is None:
+        return 1
+    print(selected.name)
+    selected.show_qr()
     return 0
 
 
