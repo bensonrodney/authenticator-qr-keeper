@@ -96,7 +96,8 @@ class Code:
                 otp = self.current_otp
                 remaining = 30 - int(time.time()) % 30
                 bar = "█" * remaining + "░" * (30 - remaining)
-                print(f"\r  OTP: {otp}  [{bar}] {remaining:2d}s  (Press Enter to continue)  ", end="", flush=True)
+                otp_fmt = f"{otp[:3]} {otp[3:]}"
+                print(f"\r  OTP: {otp_fmt}  [{bar}] {remaining:2d}s  (Press Enter to continue)  ", end="", flush=True)
                 if select.select([sys.stdin], [], [], 1)[0]:
                     sys.stdin.readline()
                     break
