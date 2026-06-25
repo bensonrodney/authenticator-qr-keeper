@@ -84,13 +84,47 @@ Alternatively, some authenticator apps (e.g. Aegis) let you export your accounts
 
 ## Shell scripts
 
-Three shell scripts are installed alongside the `qrcodes` command. They use `openssl` directly and are compatible with the encrypted file format used by this tool.
+Three shell scripts live in the `scripts/` directory and are installed alongside the `qrcodes` command. They use `openssl` directly and are fully compatible with the encrypted file format.
 
-| Script | Purpose |
-|---|---|
-| `encrypt-file.sh <infile> <outfile>` | Encrypt a plaintext file |
-| `decrypt-file.sh <infile>` | Decrypt a file to stdout |
-| `edit-encrypted-file.sh <file>` | Decrypt, open in `$EDITOR`, re-encrypt on save |
+### edit-encrypted-file.sh
+
+The most useful of the three. It lets you edit your codes file directly without leaving the terminal:
+
+```bash
+edit-encrypted-file.sh ~/.qr/.qrcodes
+```
+
+It will:
+1. Prompt for your password
+2. Decrypt the file to a secure temporary directory
+3. Open it in `$EDITOR` (set this to your preferred editor, e.g. `export EDITOR=nano`)
+4. On exit, check whether the file changed (via SHA-256)
+5. If changed: back up the original with a timestamp, then re-encrypt and save
+6. If unchanged: do nothing — the encrypted file is left untouched
+7. Securely delete the temporary decrypted file on exit (even on Ctrl+C)
+
+If the file doesn't exist yet, it will offer to create a new one.
+
+### encrypt-file.sh
+
+Encrypts a plaintext file to an output file:
+
+```bash
+encrypt-file.sh plaintext.qrcodes ~/.qr/.qrcodes
+```
+
+Useful for creating the codes file from scratch by writing a plaintext file first (see `example.qrcodes.file` in this repo for the format), then encrypting it.
+
+### decrypt-file.sh
+
+Decrypts a file and prints the contents to stdout:
+
+```bash
+decrypt-file.sh ~/.qr/.qrcodes
+decrypt-file.sh ~/.qr/.qrcodes > plaintext.qrcodes
+```
+
+Useful for inspecting the contents or making a plaintext backup. Redirect to a file if needed, but make sure to delete it afterwards.
 
 ## Development
 
