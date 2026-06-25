@@ -43,7 +43,15 @@ This installs `qrcodes` as an isolated tool into `~/.local/bin` via `uv tool ins
 qrcodes
 ```
 
-On first run, if no codes file exists, you will be prompted to create one and set a password. On subsequent runs you will be shown a numbered list of your stored accounts to choose from.
+On first run, if no codes file exists, you will be prompted to create one and set a password. On subsequent runs an interactive search screen opens:
+
+```
+  Search: git
+> GitHub:demo@example.com
+  3/5  ↑↓ navigate  Enter select  Esc quit
+```
+
+Type to filter your accounts as you type. Search terms are space-separated and use OR logic — `git aws` matches any account containing "git" or "aws". Use `↑↓` to move between matches and **Enter** to select. **Esc** exits.
 
 After selecting an account, the QR code is printed to the terminal and the live TOTP code is shown with a countdown bar:
 
@@ -51,7 +59,7 @@ After selecting an account, the QR code is printed to the terminal and the live 
   OTP: 483 921  [████████████████░░░░░░░░░░░░░░] 16s  (Press Enter to continue)
 ```
 
-Press **Enter** or **Ctrl+C** to return to the menu.
+Press **Enter** or **Ctrl+C** to return to the search screen.
 
 ### Add a new code from a QR image
 
