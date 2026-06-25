@@ -90,7 +90,12 @@ class Code:
         code = QRCode()
         code.add_data(str(self))
         code.print_ascii(invert=True)
+        print(f"  {self}\n")
         if self.current_otp is None:
+            try:
+                input("  (Press Enter to continue)  ")
+            except (KeyboardInterrupt, EOFError):
+                pass
             return
         try:
             while True:
