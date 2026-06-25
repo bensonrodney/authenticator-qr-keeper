@@ -10,6 +10,7 @@ import copy
 import getpass
 import io
 import re
+import select
 import sys
 import time
 from argparse import ArgumentParser
@@ -88,10 +89,20 @@ class Code:
         code = QRCode()
         code.add_data(str(self))
         code.print_ascii(invert=True)
-        otp = self.current_otp
-        if otp:
-            seconds_remaining = 30 - int(time.time()) % 30
-            print(f"\nCurrent OTP: {otp}  (refreshes in {seconds_remaining}s)\n")
+        if self.current_otp is None:
+            return
+        try:
+            while True:
+                otp = self.current_otp
+                remaining = 30 - int(time.time()) % 30
+                bar = "█" * remaining + "░" * (30 - remaining)
+                print(f"\r  OTP: {otp}  [{bar}] {remaining:2d}s  (Press Enter to continue)  ", end="", flush=True)
+                if select.select([sys.stdin], [], [], 1)[0]:
+                    sys.stdin.readline()
+                    break
+        except KeyboardInterrupt:
+            pass
+        print()
 
 
 def parse_file(src, password):
