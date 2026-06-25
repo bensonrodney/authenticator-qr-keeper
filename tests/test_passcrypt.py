@@ -2,8 +2,6 @@ import subprocess
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-import pytest
-
 from authentication_qr_keeper.passcrypt import (
     decrypt_file_bytes,
     encrypt_file_bytes,
@@ -50,12 +48,10 @@ def test_python_can_decrypt_openssl_encrypted_file():
 
         encrypted_file = Path(tmpdir) / "encrypted"
         result = subprocess.run(
-            f'echo "{PASSWORD}" | openssl aes-256-cbc -pass stdin -pbkdf2 -iter 10000 -salt'
-            f' -in {plaintext_file} -out {encrypted_file}',
+            f'echo "{PASSWORD}" | openssl aes-256-cbc -pass stdin -pbkdf2 -iter 10000 -salt -in {plaintext_file} -out {encrypted_file}',
             shell=True,
             check=False,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
         )
         assert result.returncode == 0
 

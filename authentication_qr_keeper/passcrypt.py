@@ -6,7 +6,6 @@ Python encryption/decryption functions compatible with openssl aes-256-cbc:
 """
 
 import hashlib
-from typing import Optional, Tuple
 
 from Crypto import Random
 from Crypto.Cipher import AES
@@ -27,22 +26,16 @@ def _unpad(s: bytes) -> bytes:
     return s[:-pad_bytes_count]
 
 
-def get_key_iv(
-    password: str, salt: Optional[bytes] = None
-) -> Tuple[bytes, bytes, bytes]:
+def get_key_iv(password: str, salt: bytes | None = None) -> tuple[bytes, bytes, bytes]:
     if not salt:
         salt = Random.new().read(BS - len(SALTED))
-    derived_key = hashlib.pbkdf2_hmac(
-        "sha256", password.encode(), salt, PBKDF2_ITERATIONS, 48
-    )
+    derived_key = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, PBKDF2_ITERATIONS, 48)
     key = derived_key[0:32]
     iv = derived_key[32:48]
     return key, iv, salt
 
 
-def encrypt_file_bytes(
-    plaintext: bytes, password: str, salt: Optional[bytes] = None
-) -> bytes:
+def encrypt_file_bytes(plaintext: bytes, password: str, salt: bytes | None = None) -> bytes:
     plaintext = _pad(plaintext)
     key, iv, salt = get_key_iv(password, salt)
     encryptor = AES.new(key, AES.MODE_CBC, iv)
@@ -51,7 +44,7 @@ def encrypt_file_bytes(
 
 
 def decrypt_file_bytes(ciphertext: bytes, password: str) -> bytes:
-    salt = ciphertext[len(SALTED):16]
+    salt = ciphertext[len(SALTED) : 16]
     ciphertext = ciphertext[16:]
     key, iv, _ = get_key_iv(password, salt)
     decryptor = AES.new(key, AES.MODE_CBC, iv)
@@ -59,9 +52,7 @@ def decrypt_file_bytes(ciphertext: bytes, password: str) -> bytes:
     return _unpad(plaintext)
 
 
-def save_data_to_encrypted_file(
-    output_file: str, plaintext: bytes, password: str, salt: Optional[bytes] = None
-) -> None:
+def save_data_to_encrypted_file(output_file: str, plaintext: bytes, password: str, salt: bytes | None = None) -> None:
     encrypted_data = encrypt_file_bytes(plaintext, password, salt)
     with open(output_file, "wb") as f:
         f.write(encrypted_data)

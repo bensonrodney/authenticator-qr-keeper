@@ -15,25 +15,23 @@ from argparse import ArgumentParser
 from datetime import datetime
 from pathlib import Path
 from shutil import copyfile
-from typing import Union
 from urllib.parse import unquote, urlparse
 
 from cv2 import QRCodeDetector, imread
 from qrcode import QRCode
 
 from authentication_qr_keeper.passcrypt import (
-    decrypt_file_bytes,
     encrypt_file_bytes,
     load_data_from_encrypted_file,
 )
 
-TYPE_TOTP = 'totp'
-TYPE_HOTP = 'hotp'
+TYPE_TOTP = "totp"
+TYPE_HOTP = "hotp"
 
 user = getpass.getuser()
 src_file_dir = Path(f"/home/{user}/.qr")
 src_file = src_file_dir / ".qrcodes"
-leading_slashes = re.compile('^[/]{1,}')
+leading_slashes = re.compile("^[/]{1,}")
 
 
 def read_and_decrypt_file(file, password):
@@ -55,7 +53,7 @@ def read_qr_code(image_file):
         return None
 
 
-class Code(object):
+class Code:
     def __init__(self, url):
         self._raw = url.strip()
         self._url = urlparse(self._raw)
@@ -65,6 +63,7 @@ class Code(object):
         if not self._name:
             self._name = leading_slashes.sub("", unquote(self._url.path))
         return copy.copy(self._name)
+
     name = property(_get_name)
 
     def __str__(self):
@@ -82,8 +81,8 @@ def parse_file(src, password):
         data_stream = read_and_decrypt_file(src, password)
         if not data_stream:
             return []
-        lines = [l.strip() for l in data_stream.readlines()]
-        codes = [Code(l) for l in lines if (len(l) > 0) and (l[0] != "#")]
+        lines = [line.strip() for line in data_stream.readlines()]
+        codes = [Code(line) for line in lines if (len(line) > 0) and (line[0] != "#")]
         return codes
     except FileNotFoundError:
         return None
@@ -95,7 +94,7 @@ def select_and_print_code(codes):
     while sel is None:
         print("\n\nSelect a code to view:\n\n")
         for i, c in enumerate(codes):
-            print("    {:>2}) {}".format(i+1, c.name))
+            print(f"    {i + 1:>2}) {c.name}")
         try:
             try:
                 selection = input("\n\nEnter selection: ")
@@ -112,8 +111,8 @@ def select_and_print_code(codes):
         except KeyboardInterrupt:
             print("\nAborted!\n\n")
             return 1
-    print(codes[sel-1].name)
-    codes[sel-1].show_qr()
+    print(codes[sel - 1].name)
+    codes[sel - 1].show_qr()
     return 0
 
 
@@ -126,8 +125,8 @@ def create_file():
 
     if not src_file_dir.is_dir():
         src_file_dir.mkdir()
-    with open(str(src_file), 'wb') as _file:
-        encrypted_data = encrypt_file_bytes(b'', password1)
+    with open(str(src_file), "wb") as _file:
+        encrypted_data = encrypt_file_bytes(b"", password1)
         _file.write(encrypted_data)
     return True
 
@@ -151,14 +150,14 @@ def do_show_codes() -> int:
 
     codes = parse_file(str(src_file), password)
     if codes is None:
-        print('ERROR! Couldn\'t parse source file.')
+        print("ERROR! Couldn't parse source file.")
         return 1
 
     if len(codes) < 1:
-        print('ERROR: No codes found in source file or the password is incorrect.')
+        print("ERROR: No codes found in source file or the password is incorrect.")
         return 1
 
-    choice_regex = re.compile(r'^([yY]|[yY][eE][sS]|)$')
+    choice_regex = re.compile(r"^([yY]|[yY][eE][sS]|)$")
     while True:
         try:
             if select_and_print_code(codes) != 0:
@@ -177,23 +176,23 @@ def do_show_codes() -> int:
 def add_code_to_file(src, password, code):
     data_stream = read_and_decrypt_file(src, password)
     if not data_stream:
-        raise RuntimeError('Failed to read source file')
+        raise RuntimeError("Failed to read source file")
 
-    lines = [l.strip() for l in data_stream.readlines()]
+    lines = [line.strip() for line in data_stream.readlines()]
     lines.append(code.strip())
     lines.append("")
 
-    data = '\n'.join(lines)
-    encrypted_data = encrypt_file_bytes(data.encode('utf-8'), password)
+    data = "\n".join(lines)
+    encrypted_data = encrypt_file_bytes(data.encode("utf-8"), password)
 
     now = datetime.now().strftime("%Y%m%d-%H%M%S")
     copyfile(src, f"{src}.backup.{now}")
 
-    with open(src, 'wb') as outfile:
+    with open(src, "wb") as outfile:
         outfile.write(encrypted_data)
 
 
-def do_add_code(image_file_path: Union[str, Path]) -> int:
+def do_add_code(image_file_path: str | Path) -> int:
     if not src_file.is_file():
         print(f"File doesn't exist: {src_file}")
         file_created = create_file()
@@ -218,7 +217,7 @@ def do_add_code(image_file_path: Union[str, Path]) -> int:
     print(f"#### {data}")
 
     if not src_file.is_file():
-        print('ERROR: source file not found. Exiting.')
+        print("ERROR: source file not found. Exiting.")
         return 1
 
     try:
@@ -238,8 +237,7 @@ def do_add_code(image_file_path: Union[str, Path]) -> int:
 
 def main():
     parser = ArgumentParser()
-    parser.add_argument('-a', '--add', metavar="IMAGE_FILE_PATH", default=None,
-        help='Add new qrcode from a qrcode image.')
+    parser.add_argument("-a", "--add", metavar="IMAGE_FILE_PATH", default=None, help="Add new qrcode from a qrcode image.")
     args = parser.parse_args()
 
     if args.add:
@@ -248,5 +246,5 @@ def main():
     return do_show_codes()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

@@ -29,10 +29,7 @@ qrcodes = "authentication_qr_keeper.qr:main"
 [project.optional-dependencies]
 dev = [
     "pytest",
-    "black",
-    "isort<=5.12.0",
-    "flake8",
-    "pylint",
+    "ruff",
 ]
 
 [tool.setuptools.packages.find]
@@ -45,15 +42,14 @@ script-files = [
     "scripts/encrypt-file.sh",
 ]
 
-[tool.black]
+[tool.ruff]
 line-length = 140
 
-[tool.isort]
-profile = "black"
-line_length = 140
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "UP", "N"]
 
-[tool.flake8]
-max-line-length = 140
+[tool.ruff.format]
+quote-style = "double"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
