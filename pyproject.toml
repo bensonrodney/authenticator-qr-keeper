@@ -1,0 +1,59 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "authenticator-qr-keeper"
+version = "0.0.1"
+description = "A place to keep and re-display Google Authenticator QR codes"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Jason Milen", email = "jpmilen@gmail.com" }]
+requires-python = ">=3.12"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+]
+keywords = ["qrcode", "authenticator", "totp", "encryption"]
+dependencies = [
+    "opencv-python",
+    "pycryptodome",
+    "qrcode>=7.3.1",
+]
+
+[project.scripts]
+qrcodes = "authentication_qr_keeper.qr:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "black",
+    "isort<=5.12.0",
+    "flake8",
+    "pylint",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.setuptools]
+script-files = [
+    "scripts/decrypt-file.sh",
+    "scripts/edit-encrypted-file.sh",
+    "scripts/encrypt-file.sh",
+]
+
+[tool.black]
+line-length = 140
+
+[tool.isort]
+profile = "black"
+line_length = 140
+
+[tool.flake8]
+max-line-length = 140
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
