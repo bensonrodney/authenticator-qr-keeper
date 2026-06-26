@@ -37,6 +37,18 @@ src_file_dir = Path(f"/home/{user}/.qr")
 src_file = src_file_dir / ".qrcodes"
 leading_slashes = re.compile("^[/]{1,}")
 
+_BRAILLE = ["⠀", "⡀", "⣀", "⣄", "⣤", "⣦", "⣶", "⣷", "⣿"]
+
+
+def _otp_dot_bar(remaining: int, period: int) -> str:
+    """4-char braille progress bar; drains right-to-left as remaining decreases."""
+    total = round(remaining / period * 32)
+    chars = []
+    for _ in range(4):
+        chars.append(_BRAILLE[min(8, total)])
+        total = max(0, total - 8)
+    return "".join(chars)
+
 
 def _parse_wifi_fields(raw: str) -> dict:
     fields = {}
@@ -89,6 +101,22 @@ class Code:
         return copy.copy(self._raw)
 
     @property
+    def totp_period(self) -> int | None:
+        if self._url.netloc != TYPE_TOTP:
+            return None
+        try:
+            return int(parse_qs(self._url.query).get("period", ["30"])[0])
+        except (ValueError, IndexError):
+            return 30
+
+    @property
+    def otp_remaining(self) -> int | None:
+        period = self.totp_period
+        if period is None:
+            return None
+        return period - int(time.time()) % period
+
+    @property
     def current_otp(self) -> str | None:
         if self._url.netloc != TYPE_TOTP:
             return None
@@ -97,7 +125,7 @@ class Code:
         if not secrets:
             return None
         try:
-            return pyotp.TOTP(secrets[0]).now()
+            return pyotp.TOTP(secrets[0], interval=self.totp_period).now()
         except Exception:
             return None
 
@@ -115,8 +143,9 @@ class Code:
         try:
             while True:
                 otp = self.current_otp
-                remaining = 30 - int(time.time()) % 30
-                bar = "█" * remaining + "░" * (30 - remaining)
+                remaining = self.otp_remaining
+                period = self.totp_period
+                bar = "█" * remaining + "░" * (period - remaining)
                 otp_fmt = f"{otp[:3]} {otp[3:]}"
                 print(f"\r  OTP: {otp_fmt}  [{bar}] {remaining:2d}s  (Press Enter to continue)  ", end="", flush=True)
                 if select.select([sys.stdin], [], [], 1)[0]:
@@ -186,7 +215,8 @@ def _interactive_select(codes: list) -> "Code | None":
                 pass
 
             # OTP column sits 2 spaces past the longest name across all codes
-            name_col_width = min(max_name_len, width - 2 - 2 - 7)  # leave room for prefix + padding + OTP
+            # "NNN NNN ⣿⣿⣿⣤" = 12 chars; with prefix (2) and padding (2) = 16
+            name_col_width = min(max_name_len, width - 2 - 2 - 12)
             for i in range(list_height):
                 idx = scroll_offset + i
                 if idx >= len(matches):
@@ -194,7 +224,8 @@ def _interactive_select(codes: list) -> "Code | None":
                 code = matches[idx]
                 name = code.name[:name_col_width]
                 otp = code.current_otp
-                otp_str = f"{otp[:3]} {otp[3:]}" if otp else ""
+                remaining = code.otp_remaining
+                otp_str = f"{otp[:3]} {otp[3:]} {_otp_dot_bar(remaining, code.totp_period)}" if otp else ""
                 prefix = "> " if idx == cursor_pos else "  "
                 line = f"{prefix}{name:<{name_col_width}}  {otp_str}"
                 try:

@@ -2,7 +2,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from authentication_qr_keeper.passcrypt import save_data_to_encrypted_file
-from authentication_qr_keeper.qr import Code, add_code_to_file, filter_codes, parse_file
+from authentication_qr_keeper.qr import Code, _otp_dot_bar, add_code_to_file, filter_codes, parse_file
 
 PASSWORD = "testpassword"
 
@@ -87,8 +87,81 @@ def test_current_otp_is_none_for_hotp():
 
 def test_current_otp_is_none_when_no_secret():
     url = "otpauth://totp/Service%3Auser?issuer=Service"
+    assert Code(url).current_otp is None
+
+
+def test_totp_period_defaults_to_30():
+    url = "otpauth://totp/Service%3Auser?secret=JBSWY3DPEHPK3PXP&issuer=Service"
+    assert Code(url).totp_period == 30
+
+
+def test_totp_period_reads_from_url():
+    url = "otpauth://totp/Service%3Auser?secret=JBSWY3DPEHPK3PXP&period=60"
+    assert Code(url).totp_period == 60
+
+
+def test_totp_period_is_none_for_non_totp():
+    assert Code("otpauth://hotp/Service?secret=X&counter=0").totp_period is None
+    assert Code("WIFI:T:WPA;S:Net;P:pass;;").totp_period is None
+
+
+def test_otp_remaining_is_between_1_and_period():
+    url = "otpauth://totp/Service%3Auser?secret=JBSWY3DPEHPK3PXP&issuer=Service"
     code = Code(url)
-    assert code.current_otp is None
+    remaining = code.otp_remaining
+    assert remaining is not None
+    assert 1 <= remaining <= 30
+
+
+def test_otp_remaining_respects_custom_period():
+    url = "otpauth://totp/Service%3Auser?secret=JBSWY3DPEHPK3PXP&period=60"
+    code = Code(url)
+    remaining = code.otp_remaining
+    assert remaining is not None
+    assert 1 <= remaining <= 60
+
+
+def test_otp_remaining_is_none_for_non_totp():
+    assert Code("WIFI:T:WPA;S:Net;P:pass;;").otp_remaining is None
+    assert Code("otpauth://hotp/Service?secret=X&counter=0").otp_remaining is None
+
+
+# ---------------------------------------------------------------------------
+# _otp_dot_bar
+# ---------------------------------------------------------------------------
+
+
+def test_otp_dot_bar_full_at_max_remaining():
+    assert _otp_dot_bar(30, 30) == "⣿⣿⣿⣿"
+
+
+def test_otp_dot_bar_empty_at_zero_remaining():
+    assert _otp_dot_bar(0, 30) == "⠀⠀⠀⠀"
+
+
+def test_otp_dot_bar_is_four_chars():
+    assert len(_otp_dot_bar(15, 30)) == 4
+
+
+def test_otp_dot_bar_drains_right_to_left():
+    # At ~1/4 remaining the rightmost three chars should be empty
+    bar = _otp_dot_bar(7, 30)
+    assert bar[1] == "⠀"
+    assert bar[2] == "⠀"
+    assert bar[3] == "⠀"
+
+
+def test_otp_dot_bar_changes_every_second():
+    # With 4 chars × 8 dots = 32 levels for any period <= 32s, each second is unique
+    bars = [_otp_dot_bar(r, 30) for r in range(1, 31)]
+    assert len(bars) == len(set(bars)), "some seconds share the same bar"
+
+
+def test_otp_dot_bar_works_with_60s_period():
+    full = _otp_dot_bar(60, 60)
+    empty = _otp_dot_bar(0, 60)
+    assert full == "⣿⣿⣿⣿"
+    assert empty == "⠀⠀⠀⠀"
 
 
 # ---------------------------------------------------------------------------
